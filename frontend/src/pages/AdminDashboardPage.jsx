@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { adminService } from "../services/adminService";
 import { voterService } from "../services/voterService";
 import { Card } from "../components/ui/Card";
@@ -8,10 +9,13 @@ import { Button } from "../components/ui/Button";
 import { VoteBarChart } from "../components/charts/VoteBarChart";
 import { VotePieChart } from "../components/charts/VotePieChart";
 import { Modal } from "../components/ui/Modal";
+import { Badge } from "../components/ui/Badge";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 
 export function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const [selectedVoterId, setSelectedVoterId] = useState(null);
+  const [voterToDelete, setVoterToDelete] = useState(null);
 
   const dashboardQuery = useQuery({ queryKey: ["admin-dashboard"], queryFn: adminService.dashboard });
   const votersQuery = useQuery({ queryKey: ["voters"], queryFn: voterService.all });
@@ -24,7 +28,9 @@ export function AdminDashboardPage() {
   const deleteVoter = useMutation({
     mutationFn: voterService.remove,
     onSuccess: () => {
+      toast.success("Voter removed");
       queryClient.invalidateQueries({ queryKey: ["voters"] });
+      setVoterToDelete(null);
     },
   });
 
@@ -47,7 +53,7 @@ export function AdminDashboardPage() {
           <Button variant="secondary" onClick={() => setSelectedVoterId(row.id)}>
             View
           </Button>
-          <Button variant="danger" onClick={() => deleteVoter.mutate(row.id)}>
+          <Button variant="danger" onClick={() => setVoterToDelete(row)}>
             Delete
           </Button>
         </div>
@@ -84,10 +90,43 @@ export function AdminDashboardPage() {
       </Card>
 
       <Modal open={Boolean(selectedVoterId)} title="Voter Profile" onClose={() => setSelectedVoterId(null)}>
-        <pre className="max-h-72 overflow-auto rounded-xl bg-slate-100 p-3 text-xs text-slate-700">
-          {JSON.stringify(voterDetailQuery.data, null, 2)}
-        </pre>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Name</p>
+            <p className="mt-1 font-semibold text-slate-800">{voterDetailQuery.data?.name || "N/A"}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Voter ID</p>
+            <p className="mt-1 font-semibold text-slate-800">{voterDetailQuery.data?.voterId || "N/A"}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-2">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Email</p>
+            <p className="mt-1 font-semibold text-slate-800">{voterDetailQuery.data?.email || "N/A"}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Age</p>
+            <p className="mt-1 font-semibold text-slate-800">{voterDetailQuery.data?.age || "N/A"}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Voting Status</p>
+            <div className="mt-2">
+              <Badge tone={voterDetailQuery.data?.hasVoted ? "success" : "warning"}>
+                {voterDetailQuery.data?.hasVoted ? "Voted" : "Pending"}
+              </Badge>
+            </div>
+          </div>
+        </div>
       </Modal>
+
+      <ConfirmModal
+        open={Boolean(voterToDelete)}
+        title="Delete Voter"
+        description={`Delete voter ${voterToDelete?.name || ""}? This action cannot be undone.`}
+        confirmLabel="Delete voter"
+        loading={deleteVoter.isPending}
+        onClose={() => setVoterToDelete(null)}
+        onConfirm={() => deleteVoter.mutate(voterToDelete.id)}
+      />
     </div>
   );
 }

@@ -7,11 +7,14 @@ import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { DataTable } from "../components/tables/DataTable";
 import { CandidateForm } from "../components/forms/CandidateForm";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 
 export function CandidateManagementPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [pendingUpdatePayload, setPendingUpdatePayload] = useState(null);
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
 
   const candidatesQuery = useQuery({ queryKey: ["candidates"], queryFn: candidateService.getAll });
   const detailQuery = useQuery({
@@ -34,6 +37,7 @@ export function CandidateManagementPage() {
     onSuccess: () => {
       toast.success("Candidate updated");
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      setPendingUpdatePayload(null);
       setOpen(false);
       setEditingId(null);
     },
@@ -44,6 +48,7 @@ export function CandidateManagementPage() {
     onSuccess: () => {
       toast.success("Candidate deleted");
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      setCandidateToDelete(null);
     },
   });
 
@@ -69,7 +74,7 @@ export function CandidateManagementPage() {
           >
             Edit
           </Button>
-          <Button variant="danger" onClick={() => deleteMutation.mutate(row.id)}>
+          <Button variant="danger" onClick={() => setCandidateToDelete(row)}>
             Delete
           </Button>
         </div>
@@ -97,11 +102,37 @@ export function CandidateManagementPage() {
         <CandidateForm
           initialData={detailQuery.data}
           loading={createMutation.isPending || updateMutation.isPending}
-          onSubmit={(payload) =>
-            editingId ? updateMutation.mutate({ id: editingId, payload }) : createMutation.mutate(payload)
-          }
+          onSubmit={(payload) => {
+            if (editingId) {
+              setOpen(false);
+              setPendingUpdatePayload(payload);
+              return;
+            }
+            createMutation.mutate(payload);
+          }}
         />
       </Modal>
+
+      <ConfirmModal
+        open={Boolean(pendingUpdatePayload && editingId)}
+        title="Update Candidate"
+        description={`Apply updates for ${detailQuery.data?.name || "this candidate"}?`}
+        confirmLabel="Update candidate"
+        confirmVariant="accent"
+        loading={updateMutation.isPending}
+        onClose={() => setPendingUpdatePayload(null)}
+        onConfirm={() => updateMutation.mutate({ id: editingId, payload: pendingUpdatePayload })}
+      />
+
+      <ConfirmModal
+        open={Boolean(candidateToDelete)}
+        title="Delete Candidate"
+        description={`Delete candidate ${candidateToDelete?.name || ""}? This cannot be undone.`}
+        confirmLabel="Delete candidate"
+        loading={deleteMutation.isPending}
+        onClose={() => setCandidateToDelete(null)}
+        onConfirm={() => deleteMutation.mutate(candidateToDelete.id)}
+      />
     </div>
   );
 }

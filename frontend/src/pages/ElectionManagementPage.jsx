@@ -8,12 +8,14 @@ import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Dropdown } from "../components/ui/Dropdown";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { statusTone } from "../utils/format";
 
 export function ElectionManagementPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ electionName: "", startDate: "", endDate: "" });
   const [controlApi, setControlApi] = useState("admin");
+  const [pendingAction, setPendingAction] = useState(null);
 
   const electionQuery = useQuery({ queryKey: ["current-election"], queryFn: electionService.current });
 
@@ -67,12 +69,12 @@ export function ElectionManagementPage() {
                 ]}
               />
             </div>
-            <Button onClick={() => startMutation.mutate(electionQuery.data?.id)} disabled={!electionQuery.data?.id || startMutation.isPending}>
+            <Button onClick={() => setPendingAction("start")} disabled={!electionQuery.data?.id || startMutation.isPending}>
               Start election
             </Button>
             <Button
               variant="danger"
-              onClick={() => endMutation.mutate(electionQuery.data?.id)}
+              onClick={() => setPendingAction("end")}
               disabled={!electionQuery.data?.id || endMutation.isPending}
             >
               End election
@@ -116,6 +118,27 @@ export function ElectionManagementPage() {
           </div>
         </form>
       </Card>
+
+      <ConfirmModal
+        open={pendingAction === "start"}
+        title="Start Election"
+        description="Start this election now? Voting will be enabled for eligible voters."
+        confirmLabel="Start now"
+        confirmVariant="accent"
+        loading={startMutation.isPending}
+        onClose={() => setPendingAction(null)}
+        onConfirm={() => startMutation.mutate(electionQuery.data?.id)}
+      />
+
+      <ConfirmModal
+        open={pendingAction === "end"}
+        title="End Election"
+        description="End this election now? This action will stop all new votes."
+        confirmLabel="End election"
+        loading={endMutation.isPending}
+        onClose={() => setPendingAction(null)}
+        onConfirm={() => endMutation.mutate(electionQuery.data?.id)}
+      />
     </div>
   );
 }

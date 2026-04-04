@@ -8,8 +8,9 @@ export function Navbar() {
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur md:px-8">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Secure panel</p>
-          <h2 className="text-xl font-semibold text-secondary">Welcome, {user?.name}</h2>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Smart Secure EVM</p>
+          <h2 className="text-xl font-semibold text-secondary">Election Command</h2>
+          <p className="text-sm text-slate-500">Welcome, {user?.name}</p>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <button className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-100" aria-label="notifications">
