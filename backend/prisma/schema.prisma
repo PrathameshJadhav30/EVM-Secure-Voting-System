@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  VOTER
+}
+
+enum ElectionStatus {
+  UPCOMING
+  ACTIVE
+  ENDED
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Voter {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  voterId   String   @unique
+  age       Int
+  hasVoted  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  votes     Vote[]
+}
+
+model Candidate {
+  id          String   @id @default(uuid())
+  name        String
+  party       String
+  symbolImage String?
+  description String?
+  createdAt   DateTime @default(now())
+  votes       Vote[]
+}
+
+model Election {
+  id           String         @id @default(uuid())
+  electionName String
+  startDate    DateTime
+  endDate      DateTime
+  status       ElectionStatus @default(UPCOMING)
+  createdAt    DateTime       @default(now())
+  votes        Vote[]
+}
+
+model Vote {
+  id          String    @id @default(uuid())
+  voterId     String
+  candidateId String
+  electionId  String
+  encryptedVote String
+  createdAt   DateTime  @default(now())
+
+  voter     Voter     @relation(fields: [voterId], references: [id], onDelete: Restrict)
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  election  Election  @relation(fields: [electionId], references: [id], onDelete: Restrict)
+
+  @@unique([voterId, electionId])
+  @@index([candidateId, electionId])
+}
