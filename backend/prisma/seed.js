@@ -40,22 +40,31 @@ async function main() {
     {
       name: "Ananya Rao",
       party: "Progressive Front",
-      symbolImage: "https://example.com/symbols/pf.png",
+      symbolImage: "/symbols/pf.svg",
       description: "Focused on education and healthcare reform",
     },
     {
       name: "Karan Mehta",
       party: "National Alliance",
-      symbolImage: "https://example.com/symbols/na.png",
+      symbolImage: "/symbols/na.svg",
       description: "Focused on infrastructure and employment growth",
     },
   ];
 
   for (const candidate of candidates) {
     const exists = await prisma.candidate.findFirst({ where: { name: candidate.name, party: candidate.party } });
-    if (!exists) {
-      await prisma.candidate.create({ data: candidate });
+    if (exists) {
+      await prisma.candidate.update({
+        where: { id: exists.id },
+        data: {
+          symbolImage: candidate.symbolImage,
+          description: candidate.description,
+        },
+      });
+      continue;
     }
+
+    await prisma.candidate.create({ data: candidate });
   }
 
   const now = new Date();

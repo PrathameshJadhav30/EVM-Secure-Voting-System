@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Progressive Front symbol">
+  <rect width="120" height="120" rx="16" fill="#0f766e"/>
+  <circle cx="60" cy="60" r="36" fill="#ccfbf1"/>
+  <path d="M40 63l14 14 26-30" fill="none" stroke="#115e59" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

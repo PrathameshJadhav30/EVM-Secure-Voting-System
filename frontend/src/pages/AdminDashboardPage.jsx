@@ -11,18 +11,20 @@ import { VotePieChart } from "../components/charts/VotePieChart";
 import { Modal } from "../components/ui/Modal";
 import { Badge } from "../components/ui/Badge";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
+import { useAuth } from "../features/auth/AuthContext";
 
 export function AdminDashboardPage() {
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [selectedVoterId, setSelectedVoterId] = useState(null);
   const [voterToDelete, setVoterToDelete] = useState(null);
 
-  const dashboardQuery = useQuery({ queryKey: ["admin-dashboard"], queryFn: adminService.dashboard });
-  const votersQuery = useQuery({ queryKey: ["voters"], queryFn: voterService.all });
+  const dashboardQuery = useQuery({ queryKey: ["admin-dashboard"], queryFn: adminService.dashboard, enabled: isAdmin });
+  const votersQuery = useQuery({ queryKey: ["voters"], queryFn: voterService.all, enabled: isAdmin });
   const voterDetailQuery = useQuery({
     queryKey: ["voter", selectedVoterId],
     queryFn: () => voterService.byId(selectedVoterId),
-    enabled: Boolean(selectedVoterId),
+    enabled: isAdmin && Boolean(selectedVoterId),
   });
 
   const deleteVoter = useMutation({

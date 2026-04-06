@@ -55,8 +55,7 @@ const getCurrentElection = async () => {
     orderBy: { startDate: "asc" },
   });
 
-  if (!upcoming) throw new AppError("No active or upcoming election found", 404);
-  return upcoming;
+  return upcoming || null;
 };
 
 const getActiveElectionForVoting = async () => {
